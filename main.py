@@ -4,6 +4,7 @@ import speech_recognition as sr
 import pyttsx3
 import webbrowser
 import wikipedia
+import wolframalpha
 
 # Speech engine initialization
 engine = pyttsx3.init()
@@ -11,6 +12,8 @@ voices = engine.getProperty('voices')
 engine.setProperty('voice',voices[0].id)
 activationWord = 'bolt'
 
+appId = 'HX2EHR-AXK6TARY8G'
+wolframClient = wolframalpha.Client(appId)
 
 def speak(text, rate=170):
     engine.setProperty('rate', rate)
@@ -62,6 +65,31 @@ def search_wiki(query = ''):
     wikisummary = get_first_two_sentences(wikisummary)
     return wikisummary
 
+def listOrDict(var):
+    if isinstance(var, list):
+        return var[0]['plaintext']
+    else:
+        return var['plaintext']
+
+def search_wolframalpha(query = ''):
+    response = wolframClient.query(query)
+    if response['@success'] == 'false':
+        return "I ain't doin this"
+    else:
+        result = ''
+        # Question
+        pod0 = response['pod'][0]
+        pod1 = response['pod'][1]
+        if (('result') in pod1['@title'].lower()) or (pod1.get('@primary', 'false') == 'true') or ('definition' in pod1['@title'].lower()):
+            result = listOrDict(pod1['subpod'])
+            return result.split('(')[0]
+        else:
+            # Get the interpretation from pod0
+            question = listOrDict(pod0['subpod'])
+            # Remove bracketed section
+            question = question.split('(')[0]
+            return question
+
     # Main Loop
 if __name__ == '__main__':
     speak('Hey Kousik!')
@@ -94,3 +122,12 @@ if __name__ == '__main__':
                 speak('Hold on let me find out.')
                 result = search_wiki(query)
                 speak(result)
+
+            # Wolframalpha
+            if query[0] == 'what' and query[1] == 'is':
+                query = ' '.join(query[1:])
+                try:
+                    result = search_wolframalpha(query)
+                    speak(result)
+                except:
+                    speak("I can't help you with this.")
