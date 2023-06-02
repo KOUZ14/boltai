@@ -2,6 +2,7 @@ from datetime import datetime
 from logging.config import listen
 import speech_recognition as sr
 import pyttsx3
+import webbrowser
 
 # Speech engine initialization
 engine = pyttsx3.init()
@@ -14,6 +15,10 @@ def speak(text, rate=170):
     engine.setProperty('rate', rate)
     engine.say(text)
     engine.runAndWait()
+
+# Configure browser
+chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
 
 
 def parseCommand():
@@ -56,3 +61,9 @@ if __name__ == '__main__':
                     query.pop(0) #remove say
                     speech = ' '.join(query)
                     speak(speech)
+
+            # Navigation
+            if query[0] == 'go' and query[1]=='to':
+                speak('Opening...')
+                query = ' '.join(query[2:])
+                webbrowser.get('chrome').open_new(query)
