@@ -3,6 +3,7 @@ from logging.config import listen
 import speech_recognition as sr
 import pyttsx3
 import webbrowser
+import wikipedia
 
 # Speech engine initialization
 engine = pyttsx3.init()
@@ -42,6 +43,25 @@ def parseCommand():
     
     return query
 
+def get_first_two_sentences(text):
+    sentences = text.split('. ')
+    first_two = '. '.join(sentences[:2]) + '.'
+    return first_two
+
+def search_wiki(query = ''):
+    searchResults = wikipedia.search(query)
+    if not searchResults:
+        print('No results')
+        return "I couldn't find anything on that"
+    try:
+        wikiPage = wikipedia.page(searchResults[0])
+    except wikipedia.DisambiguationError as error:
+        wikiPage = wikipedia.page(error.options[0])
+    print(wikiPage.title)
+    wikisummary = str(wikiPage.summary)
+    wikisummary = get_first_two_sentences(wikisummary)
+    return wikisummary
+
     # Main Loop
 if __name__ == '__main__':
     speak('Hey Kousik!')
@@ -53,12 +73,12 @@ if __name__ == '__main__':
         if query[0] == activationWord:
             query.pop(0)
 
-            #List commands
+            # List commands
             if query[0] == 'say':
                 if 'hello' in query:
                     speak("Yo how's it going.")
                 else:
-                    query.pop(0) #remove say
+                    query.pop(0) # remove say
                     speech = ' '.join(query)
                     speak(speech)
 
@@ -67,3 +87,10 @@ if __name__ == '__main__':
                 speak('Opening...')
                 query = ' '.join(query[2:])
                 webbrowser.get('chrome').open_new(query)
+
+            # Wikepedia
+            if query[0] == 'tell' and query[1] == 'me' and query[2] == 'about':
+                query = ' '.join(query[2:])
+                speak('Hold on let me find out.')
+                result = search_wiki(query)
+                speak(result)
