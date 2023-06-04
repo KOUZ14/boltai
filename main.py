@@ -5,6 +5,13 @@ import pyttsx3
 import webbrowser
 import wikipedia
 import wolframalpha
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+import credentials
+
+scope = 'user-modify-playback-state'
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=credentials.client_id,client_secret=credentials.client_secret,redirect_uri=credentials.redirect_uri,scope=scope))
+
 
 # Speech engine initialization
 engine = pyttsx3.init()
@@ -89,6 +96,18 @@ def search_wolframalpha(query = ''):
             # Remove bracketed section
             question = question.split('(')[0]
             return question
+        
+def play_song(song_name):
+    # Search for the song
+    results = sp.search(q=song_name, type='track', limit=1)
+    items = results['tracks']['items']
+    
+    if items:
+        track_uri = items[0]['uri']
+        sp.start_playback(uris=[track_uri])
+        return f"Playing {song_name} on Spotify."
+    else:
+        return f"Song '{song_name}' not found."
 
     # Main Loop
 if __name__ == '__main__':
@@ -131,3 +150,13 @@ if __name__ == '__main__':
                     speak(result)
                 except:
                     speak("I can't help you with this.")
+
+            # Spotify
+            if query[0] == 'play':
+                query = ' '.join(query[1:])
+                speak(f'Playing {query}')
+                try:
+                    result = play_song(query)
+                    speak(result)
+                except:
+                    speak("This too hard.")
